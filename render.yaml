@@ -1,0 +1,27 @@
+services:
+  # Backend FastAPI Service
+  - type: web
+    name: acira-x-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    rootDir: acira-x-backend
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+
+  # Frontend Next.js Static Site
+  - type: web
+    name: acira-x-frontend
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: out
+    rootDir: acira-x-frontend
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: acira-x-backend
+          envVarKey: RENDER_EXTERNAL_URL
