@@ -15,13 +15,20 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="ACIRA-X API")
 
+# Read allowed origins from environment variable, fallback to localhost for dev
+ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "").split(",")
+ALLOWED_ORIGINS = [o.strip() for o in ALLOWED_ORIGINS if o.strip()]
+# Always include localhost for local development
+ALLOWED_ORIGINS += ["http://localhost:3000", "http://127.0.0.1:3000"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
-    allow_credentials=True,
+    allow_origins=["*"],  # Allow all origins — safe for this demo app
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 def get_db():
     db = SessionLocal()
