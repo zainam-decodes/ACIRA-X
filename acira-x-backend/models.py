@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Boolean
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Boolean, Float
 from sqlalchemy.orm import relationship
 import datetime
 from database import Base
@@ -14,6 +14,14 @@ class Incident(Base):
     risk_score = Column(Integer, default=0)
     affected_endpoint = Column(String, default="WIN-SOC-01")
     mitre_tactic = Column(String, default="")
+    # Source: "simulation" or "telemetry"
+    source = Column(String, default="simulation")
+    # AI Analyst fields
+    threat_explanation = Column(Text, default="")
+    root_cause = Column(Text, default="")
+    predicted_impact = Column(Text, default="")
+    remediation_steps = Column(Text, default="")
+    response_action = Column(String, default="")
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow)
     
@@ -40,6 +48,14 @@ class Endpoint(Base):
     status = Column(String, default="Active")  # Active, Isolated, Offline
     last_seen = Column(DateTime, default=datetime.datetime.utcnow)
     risk_level = Column(String, default="Low")  # Low, Medium, High, Critical
+    # Real telemetry fields
+    cpu_percent = Column(Float, default=0.0)
+    ram_percent = Column(Float, default=0.0)
+    disk_percent = Column(Float, default=0.0)
+    agent_version = Column(String, default="")
+    last_telemetry = Column(DateTime, nullable=True)
+    # Is this a real enrolled agent or a simulated endpoint?
+    is_real = Column(Boolean, default=False)
 
 class Alert(Base):
     __tablename__ = "alerts"
@@ -73,3 +89,37 @@ class ProtectedFile(Base):
     upload_time = Column(DateTime, default=datetime.datetime.utcnow)
     status = Column(String, default="Protected")  # Protected, Compromised, Quarantined
     threat_detected = Column(String, default="")
+
+class TelemetrySnapshot(Base):
+    """Stores every telemetry push from real endpoint agents."""
+    __tablename__ = "telemetry_snapshots"
+    id = Column(Integer, primary_key=True, index=True)
+    device_id = Column(String, index=True)
+    hostname = Column(String)
+    ip_address = Column(String, default="")
+    os_info = Column(String, default="")
+    cpu_percent = Column(Float, default=0.0)
+    ram_percent = Column(Float, default=0.0)
+    disk_percent = Column(Float, default=0.0)
+    # JSON-encoded lists
+    processes_json = Column(Text, default="[]")
+    ports_json = Column(Text, default="[]")
+    connections_json = Column(Text, default="[]")
+    failed_login_count = Column(Integer, default=0)
+    agent_version = Column(String, default="1.0.0")
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+
+class AutonomousActionLog(Base):
+    """Records every autonomous detection → decision → action chain."""
+    __tablename__ = "autonomous_action_logs"
+    id = Column(Integer, primary_key=True, index=True)
+    incident_id = Column(String, default="")
+    endpoint_id = Column(String, default="")
+    detection_trigger = Column(String)       # What was detected
+    detection_detail = Column(Text, default="")  # Evidence details
+    decision_reasoning = Column(Text)        # ACIRA's reasoning
+    action_taken = Column(String)            # What action was executed
+    action_detail = Column(Text, default="") # Action details
+    action_status = Column(String, default="Completed")  # Completed, Pending, Failed
+    severity = Column(String, default="High")
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
