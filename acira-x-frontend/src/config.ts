@@ -1,3 +1,2 @@
-// config.ts (FRONTEND)
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://acira-backend.onrender.com";
+  (process.env.NEXT_PUBLIC_API_URL || "https://acira-backend.onrender.com").replace(/\/$/, "");
