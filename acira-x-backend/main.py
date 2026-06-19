@@ -1,3 +1,8 @@
+from database import engine
+import models
+
+models.Base.metadata.create_all(bind=engine)
+
 from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
